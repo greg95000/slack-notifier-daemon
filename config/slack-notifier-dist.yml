@@ -1,0 +1,44 @@
+username: user
+app-token: xapp-token
+bot-token: xoxb-token
+channels:
+  channel1: 
+    message-manager:  
+      status:
+        ALERT:
+          regexes: 
+            - alert-regex
+        WARNING:
+          regexes:
+            - warning-regex1
+            - warning-regex2
+        OK:
+          regexes: 
+            - ok-regex
+    devices:
+      arduino:
+        service:
+          name: ArduinoService
+          port: COM1
+          baudrate: 192500
+      philips-hue:
+        service:
+          name: PhilipsHueService
+          ip_address: 192.168.0.3
+          lamps:
+           - "lamp1"
+           - "lamp2"
+          status:
+            ALERT:
+              color: 0x0F056B
+            WARNING:
+              color: 0xFFE436
+            OK:
+              color: 0x22780F
+  channel2:
+    devices:
+      arduino:
+        service:
+          name: ArduinoService
+          port: COM1
+          baudrate: 192500

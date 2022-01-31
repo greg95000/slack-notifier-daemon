@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "slack-notifier-daemon"
+version = "0.1.0"
+description = ""
+authors = ["Your Name <you@example.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+python-daemon = "^2.3.0"
+slack-bolt = "^1.11.2"
+PyYAML = "^6.0"
+phue = "^1.1"
+rgbxy = "^0.5"
+watchdog = "^2.1.6"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
+black = "^21.12b0"
+flake8 = "^4.0.1"
+pytest-mock = "^3.6.1"
+mock = "^4.0.3"
+psutil = "^5.9.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

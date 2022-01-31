@@ -1,0 +1,4 @@
+.vscode
+**/config/slack-notifier.yml
+**/__pycache__
+**/.pytest_cache
