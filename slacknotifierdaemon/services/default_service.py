@@ -1,4 +1,4 @@
-from slacknotifierdaemon.slacknotifierdaemon.services.service_interface import (
+from slacknotifierdaemon.services.service_interface import (
     ServiceInterface,
 )
 

@@ -1,28 +1,14 @@
-from distutils.command.config import config
 from unittest.mock import patch
-import pytest
 from slack_sdk import WebClient
-from slacknotifierdaemon.slacknotifierdaemon.configuration_manager import (
-    DEFAULT_DEVICE,
-    ConfigurationManager,
-    SERVICES_PYTHON_PATH,
-    MESSAGE_MANAGERS_PATH,
-    DEVICES_PATH,
-    DEFAULT_MESSAGE_MANAGER,
-    DEFAULT_SERVICE,
-    DEFAULT_DEVICE,
-)
-from slacknotifierdaemon.slacknotifierdaemon.devices.default_device import DefaultDevice
-from slacknotifierdaemon.slacknotifierdaemon.messagemanagers.default_message_manager import (
+from slacknotifierdaemon.configuration_manager import ConfigurationManager
+from slacknotifierdaemon.devices.default_device import DefaultDevice
+from slacknotifierdaemon.messagemanagers.default_message_manager import (
     DefaultMessageManager,
 )
-from slacknotifierdaemon.slacknotifierdaemon.services.arduino_service import (
+from slacknotifierdaemon.services.arduino_service import (
     ArduinoService,
 )
-from slacknotifierdaemon.slacknotifierdaemon.services.default_service import (
-    DefaultService,
-)
-from slacknotifierdaemon.slacknotifierdaemon.services.philips_hue_service import (
+from slacknotifierdaemon.services.philips_hue_service import (
     PhilipsHueService,
 )
 
@@ -38,38 +24,6 @@ def test_singleton():
     configuration_manager_1 = ConfigurationManager()
     configuration_manager_2 = ConfigurationManager()
     assert configuration_manager_1 == configuration_manager_2
-
-
-def test_load_module(service_config_empty_data):
-    configuration_manager = ConfigurationManager()
-    module = configuration_manager.load_module(
-        SERVICES_PYTHON_PATH, DEFAULT_SERVICE, service_config_empty_data
-    )
-    assert isinstance(module, DefaultService)
-
-
-def test_load_message_manage_default(service_config_empty_data):
-    configuration_manager = ConfigurationManager()
-    module = configuration_manager.load_module(
-        MESSAGE_MANAGERS_PATH, DEFAULT_MESSAGE_MANAGER, service_config_empty_data
-    )
-    assert isinstance(module, DefaultMessageManager)
-
-
-def test_load_device_default(service_config_empty_data):
-    configuration_manager = ConfigurationManager()
-    module = configuration_manager.load_module(
-        DEVICES_PATH, DEFAULT_DEVICE, service_config_empty_data
-    )
-    assert isinstance(module, DefaultDevice)
-
-
-def test_load_service_default(service_config_empty_data):
-    configuration_manager = ConfigurationManager()
-    module = configuration_manager.load_module(
-        SERVICES_PYTHON_PATH, DEFAULT_SERVICE, service_config_empty_data
-    )
-    assert isinstance(module, DefaultService)
 
 
 @patch.object(Bridge, "connect")

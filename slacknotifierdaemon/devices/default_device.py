@@ -1,4 +1,4 @@
-from slacknotifierdaemon.slacknotifierdaemon.devices.device_interface import (
+from slacknotifierdaemon.devices.device_interface import (
     DeviceInterface,
 )
 

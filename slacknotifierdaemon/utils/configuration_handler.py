@@ -1,6 +1,6 @@
 from watchdog.events import FileSystemEventHandler
 
-from slacknotifierdaemon.slacknotifierdaemon.configuration_manager import (
+from slacknotifierdaemon.configuration_manager import (
     ConfigurationManager,
 )
 import logging

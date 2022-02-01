@@ -1,7 +1,7 @@
 from phue import Bridge
 from rgbxy import Converter
 
-from slacknotifierdaemon.slacknotifierdaemon.services.service_interface import (
+from slacknotifierdaemon.services.service_interface import (
     ServiceInterface,
 )
 

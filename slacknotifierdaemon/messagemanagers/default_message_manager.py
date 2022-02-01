@@ -1,4 +1,4 @@
-from slacknotifierdaemon.slacknotifierdaemon.messagemanagers.message_manager_interface import (
+from slacknotifierdaemon.messagemanagers.message_manager_interface import (
     MessageManagerInterface,
 )
 import re

@@ -2,26 +2,23 @@ from cmath import log
 from typing import Dict, List
 from slack_bolt import App
 from yaml import load, Loader
-import importlib
-import inspect
+
 import logging
 from slack_bolt.adapter.socket_mode import SocketModeHandler
-from slacknotifierdaemon.slacknotifierdaemon.devices.device_interface import (
+from slacknotifierdaemon.devices.device_interface import (
     DeviceInterface,
 )
-from slacknotifierdaemon.slacknotifierdaemon.models.channel import Channel
-from slacknotifierdaemon.slacknotifierdaemon.models.user import User
-from slacknotifierdaemon.slacknotifierdaemon.utils.singleton_meta import SingletonMeta
+from slacknotifierdaemon.models.channel import Channel
+from slacknotifierdaemon.models.user import User
+from slacknotifierdaemon.utils.service_factory import ServiceFactory
+from slacknotifierdaemon.utils.singleton_meta import SingletonMeta
 
-from slacknotifierdaemon.slacknotifierdaemon.utils.utils import (
-    camel_to_snake,
-    upper_first,
-)
+from slacknotifierdaemon.utils.utils import load_class
 
 
-SERVICES_PYTHON_PATH = "slacknotifierdaemon.slacknotifierdaemon.services"
-MESSAGE_MANAGERS_PATH = "slacknotifierdaemon.slacknotifierdaemon.messagemanagers"
-DEVICES_PATH = "slacknotifierdaemon.slacknotifierdaemon.devices"
+SERVICES_PYTHON_PATH = "slacknotifierdaemon.services"
+MESSAGE_MANAGERS_PATH = "slacknotifierdaemon.messagemanagers"
+DEVICES_PATH = "slacknotifierdaemon.devices"
 
 DEFAULT_DEVICE = "defaultDevice"
 DEFAULT_MESSAGE_MANAGER = "defaultMessageManager"
@@ -30,12 +27,19 @@ DEFAULT_SERVICE = "defaultService"
 logger = logging.getLogger("configuration-manager")
 
 
-class ClassNotFoundException(Exception):
-    pass
-
-
 class ConfigurationManager(metaclass=SingletonMeta):
+    """The configuration manager is a configuration loader. It load the yaml file and instanciate everything that the application needs
+
+    Args:
+        metaclass ([type], optional): The singleton metaclass as the configurationManager is the core of the application. Defaults to SingletonMeta.
+    """
+
     def __init__(self, config_path: str = "./config/slack-notifier.yml") -> None:
+        """Init the ConfigurationManager
+
+        Args:
+            config_path (str, optional): The configuration file path to load. Defaults to "./config/slack-notifier.yml".
+        """
         self.app = None
         self.config_path = config_path
         self.slack_client = None
@@ -44,12 +48,22 @@ class ConfigurationManager(metaclass=SingletonMeta):
         self.config = {}
 
     def load_yaml(self):
+        """Load the yaml configuration file
+
+        Returns:
+            [dict]: The configuration parsed dict
+        """
         logger.info("Loading configuration file")
         with open(self.config_path, "r") as yaml_file:
             self.config = load(yaml_file, Loader=Loader)
             return self.config
 
     def load_app(self):
+        """Load the application for slack bolt to consume the sockets and call with HTTP via the API
+
+        Returns:
+            [slack_bolt.App]: The application
+        """
         logger.info("Loading slack client application")
         yaml_config = self.config
         self.app = App(token=yaml_config["bot-token"])
@@ -57,6 +71,14 @@ class ConfigurationManager(metaclass=SingletonMeta):
         return self.app
 
     def load_socket(self):
+        """Load the websocket used for the slack bot
+
+        Raises:
+            Exception: If the application is not instanciated as it is a requirement to load the socket
+
+        Returns:
+            [slack_bolt.adapter.socket_mode.SocketModeHandler]: The websocket handler
+        """
         logger.info("Loading socket handler for slack client")
         yaml_config = self.config
         if self.app:
@@ -66,6 +88,14 @@ class ConfigurationManager(metaclass=SingletonMeta):
             raise Exception("App is not instanciated, cannot create the socket")
 
     def load_user(self) -> User:
+        """Load the user from the slack API
+
+        Raises:
+            Exception: If the application is not instanciated as it is a requirement to load the data
+
+        Returns:
+            User: The user class that contains the username and the id
+        """
         logger.info("Loading user information")
         yaml_config = self.config
         username = yaml_config["username"]
@@ -80,6 +110,14 @@ class ConfigurationManager(metaclass=SingletonMeta):
         return None
 
     def load_channels(self) -> Dict[str, Channel]:
+        """Load all the channels and the configuration (services, devices, ...)
+
+        Raises:
+            Exception: If the app is not instanciated we can't load the data
+
+        Returns:
+            Dict[str, Channel]: The dict with the channel id and the channel object
+        """
         logger.info("Loading channels")
         if not self.app:
             raise Exception("App is not instanciated, cannot load channels")
@@ -104,7 +142,7 @@ class ConfigurationManager(metaclass=SingletonMeta):
                     )
 
                     instanciated_devices = self.load_devices(devices)
-                    instanciated_message_manager = self.load_module(
+                    instanciated_message_manager = load_class(
                         MESSAGE_MANAGERS_PATH, DEFAULT_MESSAGE_MANAGER, message_manager
                     )
                     instanciated_channel = Channel(
@@ -118,41 +156,27 @@ class ConfigurationManager(metaclass=SingletonMeta):
         return self.channels
 
     def load_devices(self, devices: dict = {}) -> List[DeviceInterface]:
+        """Load all devices from a channel with their services
+
+        Args:
+            devices (dict, optional): The devices configuration dict to parse and load. Defaults to {}.
+
+        Returns:
+            List[DeviceInterface]: The list of the devices
+        """
         instanciated_devices = []
         logger.info("Loading devices")
+        service_factory = ServiceFactory()
         for device_name in devices:
 
             service = devices[device_name].pop("service", {})
-            instanciated_service = self.load_module(
+            instanciated_service = service_factory.build(
                 SERVICES_PYTHON_PATH, DEFAULT_SERVICE, service
             )
-            instanciated_device = self.load_module(
+            instanciated_device = load_class(
                 DEVICES_PATH, DEFAULT_DEVICE, devices[device_name]
             )
             instanciated_device.service = instanciated_service
             instanciated_devices.append(instanciated_device)
 
         return instanciated_devices
-
-    def load_module(self, module_path, default_module, config):
-        module_name = config.pop("name", default_module)
-        logger.info(f"Dynamically loading module {module_name}")
-        snake_case_module_name = camel_to_snake(module_name)
-        class_name = upper_first(module_name)
-        message_manager_module = importlib.import_module(
-            f"{module_path}.{snake_case_module_name}"
-        )
-
-        service_class = None
-        for name, obj in inspect.getmembers(message_manager_module, inspect.isclass):
-            if name == class_name:
-                service_class = obj
-                break
-
-        if service_class:
-            logger.info(f"Instanciated {class_name}")
-            return service_class(**config)
-        else:
-            raise ClassNotFoundException(
-                f"Class {class_name} not found in {module_name}"
-            )

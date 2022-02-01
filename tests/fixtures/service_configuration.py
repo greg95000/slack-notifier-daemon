@@ -32,6 +32,19 @@ def devices_config_data():
 
 
 @pytest.fixture
+def device_config_data():
+    return {
+        "arduino": {
+            "service": {
+                "name": "ArduinoService",
+                "port": "COM2",
+                "baudrate": 192500,
+            }
+        }
+    }
+
+
+@pytest.fixture
 def channels_config_data():
     return {
         "channels": {

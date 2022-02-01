@@ -1,11 +1,11 @@
 from typing import List
-from slacknotifierdaemon.slacknotifierdaemon.devices.device_interface import (
+from slacknotifierdaemon.devices.device_interface import (
     DeviceInterface,
 )
-from slacknotifierdaemon.slacknotifierdaemon.messagemanagers.default_message_manager import (
+from slacknotifierdaemon.messagemanagers.default_message_manager import (
     DefaultMessageManager,
 )
-from slacknotifierdaemon.slacknotifierdaemon.messagemanagers.message_manager_interface import (
+from slacknotifierdaemon.messagemanagers.message_manager_interface import (
     MessageManagerInterface,
 )
 
